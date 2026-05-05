@@ -1,0 +1,15 @@
+{
+  "name": "starlite-dashboard",
+  "private": true,
+  "scripts": {
+    "build": "next build",
+    "start": "next start",
+    "dev": "next dev"
+  },
+  "dependencies": {
+    "firebase": "^10.12.2",
+    "next": "14.2.3",
+    "react": "^18",
+    "react-dom": "^18"
+  }
+}
