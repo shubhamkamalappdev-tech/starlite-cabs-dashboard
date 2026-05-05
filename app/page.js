@@ -11,6 +11,7 @@ import {
 export default function Home() {
   const [logs, setLogs] = useState([]);
   const [cars, setCars] = useState([]);
+  const [drivers, setDrivers] = useState([]);
 
   const [earnings, setEarnings] = useState("");
   const [expenses, setExpenses] = useState("");
@@ -18,12 +19,17 @@ export default function Home() {
   const [carNumber, setCarNumber] = useState("");
   const [carType, setCarType] = useState("");
 
+  const [driverName, setDriverName] = useState("");
+  const [assignedCar, setAssignedCar] = useState("");
+
   async function fetchData() {
     const logsSnap = await getDocs(collection(db, "DailyLogs"));
     const carsSnap = await getDocs(collection(db, "Cars"));
+    const driversSnap = await getDocs(collection(db, "Drivers"));
 
     setLogs(logsSnap.docs.map(doc => doc.data()));
     setCars(carsSnap.docs.map(doc => doc.data()));
+    setDrivers(driversSnap.docs.map(doc => doc.data()));
   }
 
   useEffect(() => {
@@ -58,6 +64,17 @@ export default function Home() {
     fetchData();
   }
 
+  async function addDriver() {
+    await addDoc(collection(db, "Drivers"), {
+      name: driverName,
+      car: assignedCar
+    });
+
+    setDriverName("");
+    setAssignedCar("");
+    fetchData();
+  }
+
   return (
     <div style={{ padding: 20 }}>
       <h1>🚖 STARLITE CABS DASHBOARD</h1>
@@ -78,11 +95,39 @@ export default function Home() {
       />
       <button onClick={addCar}>Add Car</button>
 
-      {/* CAR LIST */}
       <h3>Cars</h3>
       {cars.map((car, i) => (
         <div key={i}>
           {car.number} - {car.type}
+        </div>
+      ))}
+
+      {/* ADD DRIVER */}
+      <h3 style={{ marginTop: 20 }}>Add Driver</h3>
+      <input
+        placeholder="Driver Name"
+        value={driverName}
+        onChange={(e) => setDriverName(e.target.value)}
+      />
+
+      <select
+        value={assignedCar}
+        onChange={(e) => setAssignedCar(e.target.value)}
+      >
+        <option value="">Assign Car</option>
+        {cars.map((car, i) => (
+          <option key={i} value={car.number}>
+            {car.number}
+          </option>
+        ))}
+      </select>
+
+      <button onClick={addDriver}>Add Driver</button>
+
+      <h3>Drivers</h3>
+      {drivers.map((driver, i) => (
+        <div key={i}>
+          {driver.name} → {driver.car}
         </div>
       ))}
 
