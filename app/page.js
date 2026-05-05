@@ -6,28 +6,23 @@ import { collection, getDocs, addDoc } from "firebase/firestore";
 
 export default function Home() {
   const [logs, setLogs] = useState([]);
-  const [cars, setCars] = useState([]);
   const [drivers, setDrivers] = useState([]);
 
-  const [earnings, setEarnings] = useState("");
-  const [expenses, setExpenses] = useState("");
-
-  const [carNumber, setCarNumber] = useState("");
-  const [carType, setCarType] = useState("");
-
   const [driverName, setDriverName] = useState("");
-  const [assignedCar, setAssignedCar] = useState("");
-
-  const [selectedCar, setSelectedCar] = useState("");
   const [selectedDriver, setSelectedDriver] = useState("");
 
+  const [cash, setCash] = useState("");
+  const [online, setOnline] = useState("");
+  const [km, setKm] = useState("");
+  const [toll, setToll] = useState("");
+  const [subscription, setSubscription] = useState("");
+  const [commission, setCommission] = useState("");
+
   async function fetchData() {
-    const logsSnap = await getDocs(collection(db, "DailyLogs"));
-    const carsSnap = await getDocs(collection(db, "Cars"));
+    const logsSnap = await getDocs(collection(db, "Logs"));
     const driversSnap = await getDocs(collection(db, "Drivers"));
 
     setLogs(logsSnap.docs.map(doc => doc.data()));
-    setCars(carsSnap.docs.map(doc => doc.data()));
     setDrivers(driversSnap.docs.map(doc => doc.data()));
   }
 
@@ -35,165 +30,103 @@ export default function Home() {
     fetchData();
   }, []);
 
-  const total = logs.reduce((acc, item) => acc + (item.net_profit || 0), 0);
-
-  async function addCar() {
-    if (!carNumber || !carType) {
-      alert("Enter car details");
-      return;
-    }
-
-    await addDoc(collection(db, "Cars"), {
-      number: carNumber,
-      type: carType
-    });
-
-    setCarNumber("");
-    setCarType("");
-    fetchData();
-  }
+  const totalOwner = logs.reduce((a, b) => a + (b.owner || 0), 0);
 
   async function addDriver() {
-    if (!driverName || !assignedCar) {
-      alert("Enter driver + assign car");
-      return;
-    }
+    if (!driverName) return;
 
     await addDoc(collection(db, "Drivers"), {
-      name: driverName,
-      car: assignedCar
+      name: driverName
     });
 
     setDriverName("");
-    setAssignedCar("");
     fetchData();
   }
 
-  async function addLog() {
-    if (!selectedCar || !selectedDriver) {
-      alert("Select car and driver first");
+  async function saveLog() {
+    if (!selectedDriver) {
+      alert("Select driver");
       return;
     }
 
-    const net_profit = Number(earnings) - Number(expenses);
+    const fuel = Number(km) * 5;
 
-    await addDoc(collection(db, "DailyLogs"), {
-      earnings: Number(earnings),
-      expenses: Number(expenses),
-      net_profit,
-      car: selectedCar,
+    const profit =
+      Number(cash) +
+      Number(online) -
+      Number(toll) -
+      Number(subscription) -
+      Number(commission) -
+      fuel;
+
+    const driverShare = profit * 0.4;
+    const owner = profit * 0.6;
+
+    await addDoc(collection(db, "Logs"), {
       driver: selectedDriver,
+      profit,
+      owner,
       date: new Date().toISOString()
     });
 
-    setEarnings("");
-    setExpenses("");
-    setSelectedCar("");
-    setSelectedDriver("");
+    setCash("");
+    setOnline("");
+    setKm("");
+    setToll("");
+    setSubscription("");
+    setCommission("");
+
     fetchData();
   }
 
   return (
-    <div style={{ padding: 20 }}>
-      <h1>🚖 STARLITE CABS DASHBOARD</h1>
+    <div style={{ padding: 20, background: "#111", minHeight: "100vh", color: "white" }}>
+      <h1>🚖 Starlite Cabs</h1>
 
-      <h2>Total Profit: ₹{total}</h2>
+      <h2>Total Owner Profit: ₹{totalOwner}</h2>
 
-      {/* ADD CAR */}
-      <h3>Add Car</h3>
-      <input
-        placeholder="Car Number"
-        value={carNumber}
-        onChange={(e) => setCarNumber(e.target.value)}
-      />
-      <input
-        placeholder="Type (EV/CNG)"
-        value={carType}
-        onChange={(e) => setCarType(e.target.value)}
-      />
-      <button onClick={addCar}>Add Car</button>
+      {/* DRIVER */}
+      <div style={{ marginBottom: 20 }}>
+        <h3>Add Driver</h3>
+        <input
+          placeholder="Driver name"
+          value={driverName}
+          onChange={(e) => setDriverName(e.target.value)}
+        />
+        <button onClick={addDriver}>Add</button>
+      </div>
 
-      <h3>Cars</h3>
-      {cars.map((car, i) => (
-        <div key={i}>
-          {car.number} - {car.type}
-        </div>
-      ))}
-
-      {/* ADD DRIVER */}
-      <h3 style={{ marginTop: 20 }}>Add Driver</h3>
-      <input
-        placeholder="Driver Name"
-        value={driverName}
-        onChange={(e) => setDriverName(e.target.value)}
-      />
-
-      <select
-        value={assignedCar}
-        onChange={(e) => setAssignedCar(e.target.value)}
-      >
-        <option value="">Assign Car</option>
-        {cars.map((car, i) => (
-          <option key={i} value={car.number}>
-            {car.number}
-          </option>
-        ))}
-      </select>
-
-      <button onClick={addDriver}>Add Driver</button>
-
-      <h3>Drivers</h3>
-      {drivers.map((driver, i) => (
-        <div key={i}>
-          {driver.name} → {driver.car}
-        </div>
-      ))}
-
-      {/* DAILY LOG */}
-      <h3 style={{ marginTop: 20 }}>Add Daily Log</h3>
-
-      <select
-        value={selectedCar}
-        onChange={(e) => setSelectedCar(e.target.value)}
-      >
-        <option value="">Select Car</option>
-        {cars.map((car, i) => (
-          <option key={i} value={car.number}>
-            {car.number}
-          </option>
-        ))}
-      </select>
-
+      {/* SELECT DRIVER */}
       <select
         value={selectedDriver}
         onChange={(e) => setSelectedDriver(e.target.value)}
       >
         <option value="">Select Driver</option>
-        {drivers.map((driver, i) => (
-          <option key={i} value={driver.name}>
-            {driver.name}
+        {drivers.map((d, i) => (
+          <option key={i} value={d.name}>
+            {d.name}
           </option>
         ))}
       </select>
 
-      <input
-        placeholder="Earnings"
-        value={earnings}
-        onChange={(e) => setEarnings(e.target.value)}
-      />
+      {/* INPUTS */}
+      <h3>Daily Entry</h3>
 
-      <input
-        placeholder="Expenses"
-        value={expenses}
-        onChange={(e) => setExpenses(e.target.value)}
-      />
+      <input placeholder="Cash" value={cash} onChange={(e) => setCash(e.target.value)} />
+      <input placeholder="Online" value={online} onChange={(e) => setOnline(e.target.value)} />
+      <input placeholder="KM" value={km} onChange={(e) => setKm(e.target.value)} />
+      <input placeholder="Toll" value={toll} onChange={(e) => setToll(e.target.value)} />
+      <input placeholder="Subscription" value={subscription} onChange={(e) => setSubscription(e.target.value)} />
+      <input placeholder="Commission" value={commission} onChange={(e) => setCommission(e.target.value)} />
 
-      <button onClick={addLog}>Add Entry</button>
+      <button onClick={saveLog}>Save</button>
 
-      <h3 style={{ marginTop: 20 }}>Logs</h3>
+      {/* LOGS */}
+      <h3>Logs</h3>
+
       {logs.map((log, i) => (
-        <div key={i}>
-          {log.car} | {log.driver} | ₹{log.net_profit}
+        <div key={i} style={{ marginBottom: 10 }}>
+          {log.driver} | ₹{log.owner}
         </div>
       ))}
     </div>
