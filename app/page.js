@@ -38,11 +38,6 @@ export default function Home() {
   const total = logs.reduce((acc, item) => acc + (item.net_profit || 0), 0);
 
   async function addCar() {
-    if (!carNumber || !carType) {
-      alert("Enter car details");
-      return;
-    }
-
     await addDoc(collection(db, "Cars"), {
       number: carNumber,
       type: carType
@@ -54,11 +49,6 @@ export default function Home() {
   }
 
   async function addDriver() {
-    if (!driverName || !assignedCar) {
-      alert("Enter driver + assign car");
-      return;
-    }
-
     await addDoc(collection(db, "Drivers"), {
       name: driverName,
       car: assignedCar
@@ -71,7 +61,7 @@ export default function Home() {
 
   async function addLog() {
     if (!selectedCar || !selectedDriver) {
-      alert("Select car and driver first");
+      alert("Select car and driver");
       return;
     }
 
