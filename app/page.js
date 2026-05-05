@@ -22,6 +22,9 @@ export default function Home() {
   const [driverName, setDriverName] = useState("");
   const [assignedCar, setAssignedCar] = useState("");
 
+  const [selectedCar, setSelectedCar] = useState("");
+  const [selectedDriver, setSelectedDriver] = useState("");
+
   async function fetchData() {
     const logsSnap = await getDocs(collection(db, "DailyLogs"));
     const carsSnap = await getDocs(collection(db, "Cars"));
@@ -45,11 +48,15 @@ export default function Home() {
       earnings: Number(earnings),
       expenses: Number(expenses),
       net_profit,
+      car: selectedCar,
+      driver: selectedDriver,
       date: new Date().toISOString()
     });
 
     setEarnings("");
     setExpenses("");
+    setSelectedCar("");
+    setSelectedDriver("");
     fetchData();
   }
 
@@ -131,8 +138,33 @@ export default function Home() {
         </div>
       ))}
 
-      {/* DAILY LOG */}
+      {/* DAILY LOG WITH LINK */}
       <h3 style={{ marginTop: 20 }}>Add Daily Log</h3>
+
+      <select
+        value={selectedCar}
+        onChange={(e) => setSelectedCar(e.target.value)}
+      >
+        <option value="">Select Car</option>
+        {cars.map((car, i) => (
+          <option key={i} value={car.number}>
+            {car.number}
+          </option>
+        ))}
+      </select>
+
+      <select
+        value={selectedDriver}
+        onChange={(e) => setSelectedDriver(e.target.value)}
+      >
+        <option value="">Select Driver</option>
+        {drivers.map((driver, i) => (
+          <option key={i} value={driver.name}>
+            {driver.name}
+          </option>
+        ))}
+      </select>
+
       <input
         placeholder="Earnings"
         value={earnings}
@@ -148,7 +180,7 @@ export default function Home() {
       <h3 style={{ marginTop: 20 }}>Logs</h3>
       {logs.map((log, i) => (
         <div key={i}>
-          ₹{log.net_profit} | {log.date}
+          {log.car} | {log.driver} | ₹{log.net_profit}
         </div>
       ))}
     </div>
