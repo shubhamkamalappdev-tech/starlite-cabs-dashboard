@@ -2,11 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { db } from "../firebase";
-import {
-  collection,
-  getDocs,
-  addDoc
-} from "firebase/firestore";
+import { collection, getDocs, addDoc } from "firebase/firestore";
 
 export default function Home() {
   const [logs, setLogs] = useState([]);
@@ -41,7 +37,44 @@ export default function Home() {
 
   const total = logs.reduce((acc, item) => acc + (item.net_profit || 0), 0);
 
+  async function addCar() {
+    if (!carNumber || !carType) {
+      alert("Enter car details");
+      return;
+    }
+
+    await addDoc(collection(db, "Cars"), {
+      number: carNumber,
+      type: carType
+    });
+
+    setCarNumber("");
+    setCarType("");
+    fetchData();
+  }
+
+  async function addDriver() {
+    if (!driverName || !assignedCar) {
+      alert("Enter driver + assign car");
+      return;
+    }
+
+    await addDoc(collection(db, "Drivers"), {
+      name: driverName,
+      car: assignedCar
+    });
+
+    setDriverName("");
+    setAssignedCar("");
+    fetchData();
+  }
+
   async function addLog() {
+    if (!selectedCar || !selectedDriver) {
+      alert("Select car and driver first");
+      return;
+    }
+
     const net_profit = Number(earnings) - Number(expenses);
 
     await addDoc(collection(db, "DailyLogs"), {
@@ -57,28 +90,6 @@ export default function Home() {
     setExpenses("");
     setSelectedCar("");
     setSelectedDriver("");
-    fetchData();
-  }
-
-  async function addCar() {
-    await addDoc(collection(db, "Cars"), {
-      number: carNumber,
-      type: carType
-    });
-
-    setCarNumber("");
-    setCarType("");
-    fetchData();
-  }
-
-  async function addDriver() {
-    await addDoc(collection(db, "Drivers"), {
-      name: driverName,
-      car: assignedCar
-    });
-
-    setDriverName("");
-    setAssignedCar("");
     fetchData();
   }
 
@@ -138,7 +149,7 @@ export default function Home() {
         </div>
       ))}
 
-      {/* DAILY LOG WITH LINK */}
+      {/* DAILY LOG */}
       <h3 style={{ marginTop: 20 }}>Add Daily Log</h3>
 
       <select
@@ -170,11 +181,13 @@ export default function Home() {
         value={earnings}
         onChange={(e) => setEarnings(e.target.value)}
       />
+
       <input
         placeholder="Expenses"
         value={expenses}
         onChange={(e) => setExpenses(e.target.value)}
       />
+
       <button onClick={addLog}>Add Entry</button>
 
       <h3 style={{ marginTop: 20 }}>Logs</h3>
