@@ -29,12 +29,35 @@ export default function Home() {
   const [form, setForm] = useState(emptyForm);
 
   async function fetchData() {
-    const snap = await getDocs(collection(db, "Logs"));
-    const data = snap.docs.map(d => ({
-      id: d.id,
-      ...d.data()
-    }));
-    setLogs(data);
+    try {
+      const snap = await getDocs(collection(db, "Logs"));
+
+      const data = snap.docs.map(d => {
+        const raw = d.data();
+
+        return {
+          id: d.id,
+          driver: raw.driver || "",
+          cash: raw.cash || 0,
+          online: raw.online || 0,
+          cashout: raw.cashout || 0,
+          commission: raw.commission || 0,
+          subscription: raw.subscription || 0,
+          toll: raw.toll || 0,
+          km: raw.km || 0,
+          driverPaid: raw.driverPaid || 0,
+          profit: Number(raw.profit) || 0,
+          owner: Number(raw.owner) || 0,
+          driverShare: Number(raw.driverShare || raw.driver) || 0,
+          balance: Number(raw.balance) || 0,
+          date: raw.date || new Date().toISOString()
+        };
+      });
+
+      setLogs(data);
+    } catch (e) {
+      console.error("FETCH ERROR:", e);
+    }
   }
 
   useEffect(() => {
@@ -53,48 +76,41 @@ export default function Home() {
       Number(f.toll || 0) -
       fuel;
 
-    const driver = profit * 0.4;
+    const driverShare = profit * 0.4;
     const owner = profit * 0.6;
-    const balance = driver - Number(f.driverPaid || 0);
+    const balance = driverShare - Number(f.driverPaid || 0);
 
-    return { profit, driver, owner, balance };
+    return { profit, driverShare, owner, balance };
   }
 
   async function save() {
     const result = calc(form);
 
-    if (editingId) {
-      await updateDoc(doc(db, "Logs", editingId), {
-        ...form,
-        ...result
-      });
-      setEditingId(null);
-    } else {
-      await addDoc(collection(db, "Logs"), {
-        ...form,
-        ...result,
-        date: new Date().toISOString()
-      });
-    }
+    try {
+      if (editingId) {
+        await updateDoc(doc(db, "Logs", editingId), {
+          ...form,
+          ...result
+        });
+        setEditingId(null);
+      } else {
+        await addDoc(collection(db, "Logs"), {
+          ...form,
+          ...result,
+          date: new Date().toISOString()
+        });
+      }
 
-    setForm(emptyForm);
-    fetchData();
+      setForm(emptyForm);
+      fetchData();
+    } catch (e) {
+      console.error("SAVE ERROR:", e);
+    }
   }
 
   function editLog(log) {
     setEditingId(log.id);
-
-    setForm({
-      driver: log.driver || "",
-      cash: log.cash || "",
-      online: log.online || "",
-      cashout: log.cashout || "",
-      commission: log.commission || "",
-      subscription: log.subscription || "",
-      toll: log.toll || "",
-      km: log.km || "",
-      driverPaid: log.driverPaid || ""
-    });
+    setForm(log);
   }
 
   const total = logs.reduce((a, b) => a + (b.owner || 0), 0);
@@ -108,7 +124,7 @@ export default function Home() {
       {/* FORM */}
       <div style={{
         display: "grid",
-        gridTemplateColumns: "repeat(auto-fit,minmax(150px,1fr))",
+        gridTemplateColumns: "repeat(auto-fit,minmax(140px,1fr))",
         gap: 10
       }}>
         {Object.keys(form).map(key => (
@@ -121,7 +137,7 @@ export default function Home() {
             }
             style={{
               padding: 10,
-              borderRadius: 8,
+              borderRadius: 6,
               border: "none"
             }}
           />
@@ -133,11 +149,7 @@ export default function Home() {
       </button>
 
       {/* TABLE */}
-      <table style={{
-        width: "100%",
-        marginTop: 20,
-        borderCollapse: "collapse"
-      }}>
+      <table style={{ width: "100%", marginTop: 20 }}>
         <thead>
           <tr>
             <th>Date</th>
@@ -153,11 +165,13 @@ export default function Home() {
         <tbody>
           {logs.map((l) => (
             <tr key={l.id} style={{ background: "#1e293b" }}>
-              <td>{l.date ? new Date(l.date).toLocaleDateString() : "-"}</td>
+              <td>
+                {l.date ? new Date(l.date).toLocaleDateString() : "-"}
+              </td>
               <td>{l.driver}</td>
               <td>₹{(l.profit || 0).toFixed(0)}</td>
               <td>₹{(l.owner || 0).toFixed(0)}</td>
-              <td>₹{(l.driver || 0).toFixed(0)}</td>
+              <td>₹{(l.driverShare || 0).toFixed(0)}</td>
               <td>₹{(l.balance || 0).toFixed(0)}</td>
               <td>
                 <button onClick={() => editLog(l)}>Edit</button>
@@ -177,6 +191,5 @@ const btn = {
   background: "#22c55e",
   border: "none",
   borderRadius: 6,
-  color: "white",
-  cursor: "pointer"
+  color: "white"
 };
