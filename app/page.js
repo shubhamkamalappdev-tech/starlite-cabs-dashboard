@@ -34,6 +34,7 @@ export default function Home() {
     fetchData();
   }, []);
 
+  // 🔥 CALCULATE
   function calculate() {
     const fuel = Number(km) * 5;
 
@@ -51,7 +52,7 @@ export default function Home() {
 
     const driverBalance = driverShare - Number(driverPaid);
 
-    const data = {
+    setResult({
       driver: selectedDriver,
       profit,
       driverShare,
@@ -59,36 +60,67 @@ export default function Home() {
       driverPaid: Number(driverPaid),
       driverBalance,
       date: new Date().toISOString()
-    };
-
-    setResult(data);
+    });
   }
 
   async function saveLog() {
-    if (!result) {
-      alert("Calculate first");
-      return;
-    }
+    if (!result) return alert("Calculate first");
 
     await addDoc(collection(db, "Logs"), result);
     fetchData();
   }
 
+  // 🔥 DASHBOARD CALC
+  let totalOwner = 0;
+  let monthlyOwner = 0;
+  let driverStats = {};
+
+  const currentMonth = new Date().getMonth();
+
+  logs.forEach(l => {
+    totalOwner += l.ownerShare || 0;
+
+    let logMonth = new Date(l.date).getMonth();
+    if (logMonth === currentMonth) {
+      monthlyOwner += l.ownerShare || 0;
+    }
+
+    driverStats[l.driver] =
+      (driverStats[l.driver] || 0) + (l.ownerShare || 0);
+  });
+
   return (
-    <div style={{ padding: 20, background: "#111", minHeight: "100vh", color: "white" }}>
+    <div style={{ padding: 20, background: "#111", color: "white", minHeight: "100vh" }}>
       <h1>🚖 Starlite Cabs</h1>
 
-      {/* DRIVER */}
+      {/* 📊 DASHBOARD */}
+      <div style={{ marginBottom: 20 }}>
+        <h2>Total Owner Profit: ₹{totalOwner.toFixed(0)}</h2>
+        <h3>Monthly Profit: ₹{monthlyOwner.toFixed(0)}</h3>
+
+        <h4>Driver Performance</h4>
+        {Object.keys(driverStats).map((d, i) => (
+          <div key={i}>
+            {d} → ₹{driverStats[d].toFixed(0)}
+          </div>
+        ))}
+      </div>
+
+      {/* ADD DRIVER */}
       <input
-        placeholder="New Driver"
+        placeholder="Driver Name"
         value={driverName}
         onChange={(e) => setDriverName(e.target.value)}
       />
-      <button onClick={async () => {
-        await addDoc(collection(db, "Drivers"), { name: driverName });
-        setDriverName("");
-        fetchData();
-      }}>Add Driver</button>
+      <button
+        onClick={async () => {
+          await addDoc(collection(db, "Drivers"), { name: driverName });
+          setDriverName("");
+          fetchData();
+        }}
+      >
+        Add Driver
+      </button>
 
       <select value={selectedDriver} onChange={(e) => setSelectedDriver(e.target.value)}>
         <option value="">Select Driver</option>
@@ -97,7 +129,7 @@ export default function Home() {
         ))}
       </select>
 
-      {/* INPUTS */}
+      {/* INPUT */}
       <h3>Daily Entry</h3>
 
       <input placeholder="Cash" value={cash} onChange={(e) => setCash(e.target.value)} />
@@ -110,26 +142,46 @@ export default function Home() {
       <input placeholder="Driver Paid" value={driverPaid} onChange={(e) => setDriverPaid(e.target.value)} />
 
       <button onClick={calculate}>Calculate</button>
-      <button onClick={saveLog}>Save Log</button>
+      <button onClick={saveLog}>Save</button>
 
       {/* RESULT */}
       {result && (
-        <div style={{ marginTop: 15 }}>
-          <p>Fuel: ₹{(km * 5).toFixed(0)}</p>
-          <p>Total Profit: ₹{result.profit.toFixed(0)}</p>
+        <div>
+          <p>Profit: ₹{result.profit.toFixed(0)}</p>
           <p>Driver Share: ₹{result.driverShare.toFixed(0)}</p>
           <p>Owner Share: ₹{result.ownerShare.toFixed(0)}</p>
-          <p>Driver Balance: ₹{result.driverBalance.toFixed(0)}</p>
+          <p>Balance: ₹{result.driverBalance.toFixed(0)}</p>
         </div>
       )}
 
-      {/* LOGS */}
+      {/* LOG TABLE */}
       <h3>Logs</h3>
-      {logs.map((log, i) => (
-        <div key={i}>
-          {log.driver} | ₹{log.ownerShare?.toFixed(0)}
-        </div>
-      ))}
+
+      <table style={{ width: "100%", marginTop: 10 }}>
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Driver</th>
+            <th>Profit</th>
+            <th>Owner</th>
+            <th>Driver</th>
+            <th>Balance</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          {logs.map((l, i) => (
+            <tr key={i}>
+              <td>{new Date(l.date).toLocaleDateString()}</td>
+              <td>{l.driver}</td>
+              <td>₹{l.profit?.toFixed(0)}</td>
+              <td>₹{l.ownerShare?.toFixed(0)}</td>
+              <td>₹{l.driverShare?.toFixed(0)}</td>
+              <td>₹{l.driverBalance?.toFixed(0)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }
