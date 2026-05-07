@@ -1,179 +1,129 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { db } from "../firebase";
 
-import {
-  collection,
-  getDocs,
-  addDoc,
-  updateDoc,
-  doc
-} from "firebase/firestore";
+import Sidebar from "../components/Sidebar";
+import Header from "../components/Header";
+import AnalyticsCards from "../components/AnalyticsCards";
+import ProfitChart from "../components/ProfitChart";
 
-import DashboardCards from "../widgets/DashboardCards";
-import EntryForm from "../widgets/EntryForm";
-import LogsTable from "../widgets/LogsTable";
-
-import { colors } from "./styles/theme";
+import { getLogs } from "../lib/firebaseHelpers";
 
 export default function Home() {
-  const emptyForm = {
-    driver: "",
-    car: "",
-    cash: "",
-    online: "",
-    cashout: "",
-    commission: "",
-    subscription: "",
-    toll: "",
-    km: "",
-    driverPaid: ""
-  };
-
-  const [logs, setLogs] = useState([]);
-  const [editingId, setEditingId] = useState(null);
-  const [form, setForm] = useState(emptyForm);
-
-  async function fetchData() {
-    try {
-      const snap = await getDocs(collection(db, "Logs"));
-
-      const data = snap.docs.map((d) => ({
-        id: d.id,
-        ...d.data()
-      }));
-
-      setLogs(data);
-    } catch (e) {
-      console.log(e);
-    }
-  }
+  const [logs, setLogs] =
+    useState([]);
 
   useEffect(() => {
-    fetchData();
+    loadLogs();
   }, []);
 
-  function calculate(data) {
-    const fuel = Number(data.km || 0) * 5;
+  async function loadLogs() {
+    const data =
+      await getLogs();
 
-    const profit =
-      Number(data.cash || 0) +
-      Number(data.online || 0) +
-      Number(data.cashout || 0) -
-      Number(data.commission || 0) -
-      Number(data.subscription || 0) -
-      Number(data.toll || 0) -
-      fuel;
-
-    const owner = profit * 0.6;
-    const driverShare = profit * 0.4;
-    const balance = driverShare - Number(data.driverPaid || 0);
-
-    return {
-      profit,
-      owner,
-      driverShare,
-      balance
-    };
+    setLogs(data);
   }
 
-  async function save() {
-    try {
-      const calc = calculate(form);
+  const totalProfit =
+    logs.reduce(
+      (sum, log) =>
+        sum +
+        Number(log.profit || 0),
+      0
+    );
 
-      if (editingId) {
-        await updateDoc(doc(db, "Logs", editingId), {
-          ...form,
-          ...calc
-        });
+  const ownerProfit =
+    logs.reduce(
+      (sum, log) =>
+        sum +
+        Number(
+          log.ownerShare || 0
+        ),
+      0
+    );
 
-        setEditingId(null);
-      } else {
-        await addDoc(collection(db, "Logs"), {
-          ...form,
-          ...calc,
-          date: new Date().toISOString()
-        });
-      }
+  const driverPayout =
+    logs.reduce(
+      (sum, log) =>
+        sum +
+        Number(
+          log.driverShare || 0
+        ),
+      0
+    );
 
-      setForm(emptyForm);
-      fetchData();
-    } catch (e) {
-      console.log(e);
-    }
-  }
+  const bestCar =
+    logs.sort(
+      (a, b) =>
+        b.profit - a.profit
+    )[0]?.car;
 
-  function editLog(log) {
-    setEditingId(log.id);
+  const bestDriver =
+    logs.sort(
+      (a, b) =>
+        b.profit - a.profit
+    )[0]?.driver;
 
-    setForm({
-      driver: log.driver || "",
-      car: log.car || "",
-      cash: log.cash || "",
-      online: log.online || "",
-      cashout: log.cashout || "",
-      commission: log.commission || "",
-      subscription: log.subscription || "",
-      toll: log.toll || "",
-      km: log.km || "",
-      driverPaid: log.driverPaid || ""
-    });
-  }
-
-  const totalProfit = logs.reduce(
-    (a, b) => a + Number(b.owner || 0),
-    0
-  );
-
-  const totalDue = logs.reduce(
-    (a, b) => a + Number(b.balance || 0),
-    0
-  );
-
-  const currentMonth = new Date().getMonth();
-
-  const monthlyProfit = logs
-    .filter((l) => {
-      if (!l.date) return false;
-
-      return (
-        new Date(l.date).getMonth() === currentMonth
-      );
+  const chartData = logs.map(
+    (log) => ({
+      date: log.createdAt,
+      profit:
+        Number(log.profit)
     })
-    .reduce((a, b) => a + Number(b.owner || 0), 0);
+  );
+
+  const mobile =
+    typeof window !==
+      "undefined" &&
+    window.innerWidth < 768;
 
   return (
     <div
       style={{
-        background: colors.bg,
+        display: "flex",
+        background: "#050816",
         minHeight: "100vh",
-        padding: 20,
-        color: colors.text,
-        fontFamily: "system-ui"
+        color: "white",
+        overflowX: "hidden"
       }}
     >
-      <h1 style={{ marginBottom: 20 }}>
-        🚖 Starlite Cabs Pro
-      </h1>
+      <Sidebar />
 
-      <DashboardCards
-        totalProfit={totalProfit}
-        monthlyProfit={monthlyProfit}
-        totalDue={totalDue}
-      />
+      <main
+        style={{
+          flex: 1,
 
-      <EntryForm
-        form={form}
-        setForm={setForm}
-        save={save}
-        editing={editingId}
-      />
+          padding: mobile
+            ? 8
+            : 30,
 
-      <LogsTable
-        logs={logs}
-        editLog={editLog}
-      />
+          width: "100%",
+
+          overflowX: "auto"
+        }}
+      >
+        <Header />
+
+        <AnalyticsCards
+          totalProfit={
+            totalProfit
+          }
+          ownerProfit={
+            ownerProfit
+          }
+          driverPayout={
+            driverPayout
+          }
+          bestCar={bestCar}
+          bestDriver={
+            bestDriver
+          }
+        />
+
+        <ProfitChart
+          data={chartData}
+        />
+      </main>
     </div>
   );
 }

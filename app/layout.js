@@ -1,12 +1,28 @@
+import AuthProvider from "../components/AuthProvider";
+
 export const metadata = {
-  title: "Starlite Cabs Dashboard",
-  description: "Taxi business dashboard",
+  title: "Starlite Cabs",
+  description:
+    "Fleet Management"
 };
 
-export default function RootLayout({ children }) {
+export default function RootLayout({
+  children
+}) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body
+        style={{
+          margin: 0,
+          padding: 0,
+          background:
+            "#050816"
+        }}
+      >
+        <AuthProvider>
+          {children}
+        </AuthProvider>
+      </body>
     </html>
   );
 }
