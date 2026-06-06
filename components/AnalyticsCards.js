@@ -4,29 +4,60 @@ export default function AnalyticsCards({
   totalProfit,
   ownerProfit,
   driverPayout,
+  rentalIncome,
+  totalKm,
+  highestDay,
   bestCar,
   bestDriver
 }) {
   const cards = [
     {
-      title: "Total Profit",
-      value: `₹${totalProfit}`
+      title: "Business Income",
+      value: `₹${Number(
+        totalProfit || 0
+      ).toLocaleString()}`
+    },
+    {
+      title: "Rental Income",
+      value: `₹${Number(
+        rentalIncome || 0
+      ).toLocaleString()}`
     },
     {
       title: "Owner Earnings",
-      value: `₹${ownerProfit}`
+      value: `₹${Number(
+        ownerProfit || 0
+      ).toLocaleString()}`
     },
     {
       title: "Driver Payout",
-      value: `₹${driverPayout}`
+      value: `₹${Number(
+        driverPayout || 0
+      ).toLocaleString()}`
+    },
+    {
+      title: "Total KM",
+      value: Number(
+        totalKm || 0
+      ).toLocaleString()
+    },
+    {
+      title: "Highest Day",
+      value: highestDay
+        ? `₹${Number(
+            highestDay.profit || 0
+          ).toLocaleString()}`
+        : "-"
     },
     {
       title: "Best Vehicle",
-      value: bestCar || "-"
+      value:
+        bestCar || "-"
     },
     {
       title: "Best Driver",
-      value: bestDriver || "-"
+      value:
+        bestDriver || "-"
     }
   ];
 
@@ -40,35 +71,56 @@ export default function AnalyticsCards({
         marginBottom: 30
       }}
     >
-      {cards.map((card, index) => (
-        <div
-          key={index}
-          style={{
-            background: "#111827",
-            padding: 24,
-            borderRadius: 20,
-            border: "1px solid #1E293B"
-          }}
-        >
-          <p
+      {cards.map(
+        (
+          card,
+          index
+        ) => (
+          <div
+            key={index}
             style={{
-              color: "#94A3B8",
-              marginBottom: 12
-            }}
-          >
-            {card.title}
-          </p>
+              background:
+                "#111827",
 
-          <h2
-            style={{
-              fontSize: 28,
-              fontWeight: "bold"
+              padding: 24,
+
+              borderRadius: 20,
+
+              border:
+                "1px solid #1E293B",
+
+              minHeight: 120
             }}
           >
-            {card.value}
-          </h2>
-        </div>
-      ))}
+            <p
+              style={{
+                color:
+                  "#94A3B8",
+
+                marginBottom: 12,
+
+                fontSize: 14
+              }}
+            >
+              {card.title}
+            </p>
+
+            <h2
+              style={{
+                fontSize: 26,
+
+                fontWeight:
+                  "bold",
+
+                wordBreak:
+                  "break-word"
+              }}
+            >
+              {card.value}
+            </h2>
+          </div>
+        )
+      )}
     </div>
   );
 }

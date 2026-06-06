@@ -9,6 +9,8 @@ export default function LogsForm({
 }) {
   const [form, setForm] =
     useState({
+      date: "",
+
       driver: "",
       car: "",
 
@@ -91,12 +93,14 @@ export default function LogsForm({
       balance,
 
       createdAt:
-        new Date().toLocaleDateString()
+        form.date
     });
 
     alert("Saved");
 
     setForm({
+      date: "",
+
       driver: "",
       car: "",
 
@@ -146,6 +150,15 @@ export default function LogsForm({
           gap: 12
         }}
       >
+        <input
+          type="date"
+          name="date"
+          onChange={
+            handleChange
+          }
+          value={form.date}
+        />
+
         <select
           name="driver"
           onChange={

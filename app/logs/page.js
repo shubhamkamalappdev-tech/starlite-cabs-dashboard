@@ -49,22 +49,6 @@ export default function Logs() {
     loadData();
   }
 
-  function shareWhatsApp(log) {
-    const text =
-      `🚖 Starlite Cabs Daily Report
-
-Driver: ${log.driver}
-Car: ${log.car}
-
-Profit: ₹${log.profit}`;
-
-    window.open(
-      `https://wa.me/?text=${encodeURIComponent(
-        text
-      )}`
-    );
-  }
-
   async function handleDelete(
     id
   ) {
@@ -82,19 +66,25 @@ Profit: ₹${log.profit}`;
   async function handleEdit(
     log
   ) {
-    const profit = prompt(
-      "New Profit",
-      log.profit
+    const newDate = prompt(
+      "Date",
+      log.createdAt
     );
 
-    if (!profit) return;
+    if (!newDate) return;
 
     await updateLog(log.id, {
-      profit
+      createdAt:
+        newDate
     });
 
     loadData();
   }
+
+  const mobile =
+    typeof window !==
+      "undefined" &&
+    window.innerWidth < 768;
 
   return (
     <div
@@ -102,7 +92,8 @@ Profit: ₹${log.profit}`;
         display: "flex",
         background: "#050816",
         minHeight: "100vh",
-        color: "white"
+        color: "white",
+        overflowX: "hidden"
       }}
     >
       <Sidebar />
@@ -110,12 +101,20 @@ Profit: ₹${log.profit}`;
       <div
         style={{
           flex: 1,
-          padding: 30
+
+          padding: mobile
+            ? 8
+            : 30,
+
+          overflowX: "auto"
         }}
       >
         <h1
           style={{
-            marginBottom: 30
+            marginBottom: 20,
+            fontSize: mobile
+              ? 34
+              : 48
           }}
         >
           Daily Logs
@@ -148,7 +147,8 @@ Profit: ₹${log.profit}`;
 
           <table
             style={{
-              width: "100%"
+              width: "100%",
+              minWidth: 1200
             }}
           >
             <thead>
@@ -160,8 +160,15 @@ Profit: ₹${log.profit}`;
               >
                 <th>Date</th>
                 <th>Driver</th>
-                <th>Car</th>
+                <th>Vehicle</th>
+                <th>Total</th>
+                <th>Fuel</th>
+                <th>Expenses</th>
                 <th>Profit</th>
+                <th>Owner</th>
+                <th>Driver</th>
+                <th>Balance</th>
+                <th>KM</th>
                 <th>Actions</th>
               </tr>
             </thead>
@@ -170,7 +177,9 @@ Profit: ₹${log.profit}`;
               {logs.map((log) => (
                 <tr key={log.id}>
                   <td>
-                    {log.createdAt}
+                    {
+                      log.createdAt
+                    }
                   </td>
 
                   <td>
@@ -180,7 +189,48 @@ Profit: ₹${log.profit}`;
                   <td>{log.car}</td>
 
                   <td>
-                    ₹{log.profit}
+                    ₹{log.total}
+                  </td>
+
+                  <td>
+                    ₹{log.fuel}
+                  </td>
+
+                  <td>
+                    ₹
+                    {
+                      log.expenses
+                    }
+                  </td>
+
+                  <td>
+                    ₹
+                    {log.profit}
+                  </td>
+
+                  <td>
+                    ₹
+                    {
+                      log.ownerShare
+                    }
+                  </td>
+
+                  <td>
+                    ₹
+                    {
+                      log.driverShare
+                    }
+                  </td>
+
+                  <td>
+                    ₹
+                    {
+                      log.balance
+                    }
+                  </td>
+
+                  <td>
+                    {log.km}
                   </td>
 
                   <td>
@@ -188,21 +238,9 @@ Profit: ₹${log.profit}`;
                       style={{
                         display:
                           "flex",
-                        gap: 8,
-                        flexWrap:
-                          "wrap"
+                        gap: 8
                       }}
                     >
-                      <button
-                        onClick={() =>
-                          shareWhatsApp(
-                            log
-                          )
-                        }
-                      >
-                        WhatsApp
-                      </button>
-
                       <button
                         onClick={() =>
                           handleEdit(

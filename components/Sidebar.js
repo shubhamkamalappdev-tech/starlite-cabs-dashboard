@@ -6,7 +6,8 @@ import {
   FaHome,
   FaUsers,
   FaCar,
-  FaClipboardList
+  FaClipboardList,
+  FaMoneyBillWave
 } from "react-icons/fa";
 
 export default function Sidebar() {
@@ -31,6 +32,10 @@ export default function Sidebar() {
     {
       path: "/logs",
       icon: <FaClipboardList />
+    },
+    {
+      path: "/rentals",
+      icon: <FaMoneyBillWave />
     }
   ];
 
@@ -40,18 +45,13 @@ export default function Sidebar() {
         width: mobile
           ? 65
           : 220,
-
         background: "#0F172A",
-
         padding: mobile
           ? 8
           : 20,
-
         borderRight:
           "1px solid #1E293B",
-
         minHeight: "100vh",
-
         flexShrink: 0
       }}
     >
@@ -60,11 +60,8 @@ export default function Sidebar() {
           fontSize: mobile
             ? 18
             : 28,
-
           fontWeight: "bold",
-
           marginBottom: 30,
-
           textAlign: "center"
         }}
       >
@@ -76,10 +73,8 @@ export default function Sidebar() {
       <div
         style={{
           display: "flex",
-
           flexDirection:
             "column",
-
           gap: 10
         }}
       >
@@ -91,7 +86,6 @@ export default function Sidebar() {
               style={{
                 textDecoration:
                   "none",
-
                 color:
                   "white"
               }}
@@ -100,23 +94,17 @@ export default function Sidebar() {
                 style={{
                   display:
                     "flex",
-
                   alignItems:
                     "center",
-
                   justifyContent:
                     "center",
-
                   padding:
                     mobile
                       ? "14px 10px"
                       : "14px 16px",
-
                   borderRadius: 12,
-
                   background:
                     "#111827",
-
                   fontSize:
                     mobile
                       ? 20
